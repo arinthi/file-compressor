@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="stylesheet" href="style.css">
+    <title>File Compressor</title>
 </head>
 
 <body>
@@ -10,10 +10,74 @@
 
 <input type="file" id="file">
 
+<br><br>
+
 <button onclick="compress()">Compress</button>
 <button onclick="decompress()">Decompress</button>
 
-<script src="script.js"></script>
+<script>
+const BASE_URL = window.location.origin; // VERY IMPORTANT
+
+function compress() {
+    let file = document.getElementById("file").files[0];
+
+    if (!file) {
+        alert("Select a file first!");
+        return;
+    }
+
+    let form = new FormData();
+    form.append("file", file);
+
+    fetch(BASE_URL + "/compress", {
+        method: "POST",
+        body: form
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("Upload failed");
+        return res.blob();
+    })
+    .then(blob => {
+        let a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "compressed.qzip";
+        a.click();
+    })
+    .catch(err => {
+        alert("Error: " + err.message);
+    });
+}
+
+function decompress() {
+    let file = document.getElementById("file").files[0];
+
+    if (!file) {
+        alert("Select a file first!");
+        return;
+    }
+
+    let form = new FormData();
+    form.append("file", file);
+
+    fetch(BASE_URL + "/decompress", {
+        method: "POST",
+        body: form
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("Upload failed");
+        return res.blob();
+    })
+    .then(blob => {
+        let a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "decompressed.txt";
+        a.click();
+    })
+    .catch(err => {
+        alert("Error: " + err.message);
+    });
+}
+</script>
 
 </body>
 </html>
