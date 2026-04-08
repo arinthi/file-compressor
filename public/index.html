@@ -12,13 +12,17 @@
 
 <br><br>
 
-<button onclick="compress()">Compress</button>
-<button onclick="decompress()">Decompress</button>
+<button id="compressBtn">Compress</button>
+<button id="decompressBtn">Decompress</button>
 
 <script>
-const BASE_URL = window.location.origin; // VERY IMPORTANT
+console.log("JS LOADED"); // DEBUG
 
-function compress() {
+const BASE_URL = window.location.origin;
+
+document.getElementById("compressBtn").addEventListener("click", () => {
+    console.log("Compress clicked");
+
     let file = document.getElementById("file").files[0];
 
     if (!file) {
@@ -45,10 +49,13 @@ function compress() {
     })
     .catch(err => {
         alert("Error: " + err.message);
+        console.error(err);
     });
-}
+});
 
-function decompress() {
+document.getElementById("decompressBtn").addEventListener("click", () => {
+    console.log("Decompress clicked");
+
     let file = document.getElementById("file").files[0];
 
     if (!file) {
@@ -75,8 +82,9 @@ function decompress() {
     })
     .catch(err => {
         alert("Error: " + err.message);
+        console.error(err);
     });
-}
+});
 </script>
 
 </body>
