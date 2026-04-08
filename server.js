@@ -1,31 +1,38 @@
 const express = require('express');
-const { exec } = require('child_process');
+const { execSync, exec } = require('child_process');
 const multer = require('multer');
 const fs = require('fs');
 
 const app = express();
 
-// ✅ ensure uploads folder exists (important for Render)
+// ensure uploads folder
 if (!fs.existsSync('uploads')) {
     fs.mkdirSync('uploads');
 }
 
 const upload = multer({ dest: 'uploads/' });
 
-// ✅ detect OS
+// detect OS
 const isWindows = process.platform === "win32";
 
-// ✅ compile command
-const compileCmd = isWindows
-    ? "g++ compressor.cpp -o compressor.exe"
-    : "g++ compressor.cpp -o compressor";
+// compile only ONCE when server starts
+try {
+    console.log("Compiling compressor...");
 
-// ✅ run command
-const runCmd = isWindows
-    ? "compressor.exe"
-    : "./compressor";
+    if (isWindows) {
+        execSync("g++ compressor.cpp -o compressor.exe");
+    } else {
+        execSync("g++ compressor.cpp -o compressor");
+    }
 
-// ✅ serve frontend
+    console.log("Compilation done");
+} catch (err) {
+    console.error("Compilation failed", err);
+}
+
+// run command
+const runCmd = isWindows ? "compressor.exe" : "./compressor";
+
 app.use(express.static('public'));
 
 // ================= COMPRESS =================
@@ -35,11 +42,8 @@ app.post('/compress', upload.single('file'), (req, res) => {
     const input = req.file.path;
     const output = input + ".qzip";
 
-    exec(`${compileCmd} && ${runCmd} c "${input}" "${output}"`, (err) => {
-        if (err) {
-            console.log(err);
-            return res.send("Compression error");
-        }
+    exec(`${runCmd} c "${input}" "${output}"`, (err) => {
+        if (err) return res.send("Compression error");
 
         res.download(output, "compressed.qzip", () => {
             fs.unlinkSync(input);
@@ -55,11 +59,8 @@ app.post('/decompress', upload.single('file'), (req, res) => {
     const input = req.file.path;
     const output = input + "_out";
 
-    exec(`${compileCmd} && ${runCmd} d "${input}" "${output}"`, (err) => {
-        if (err) {
-            console.log(err);
-            return res.send("Decompression error");
-        }
+    exec(`${runCmd} d "${input}" "${output}"`, (err) => {
+        if (err) return res.send("Decompression error");
 
         res.download(output, "decompressed.txt", () => {
             fs.unlinkSync(input);
@@ -68,7 +69,7 @@ app.post('/decompress', upload.single('file'), (req, res) => {
     });
 });
 
-// ✅ IMPORTANT: works for both local + Render
+// correct port
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
