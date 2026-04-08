@@ -1,26 +1,31 @@
-// ================= CROSS-PLATFORM SERVER =================
 const express = require('express');
 const { exec } = require('child_process');
 const multer = require('multer');
 const fs = require('fs');
 
 const app = express();
+
+// ✅ ensure uploads folder exists (important for Render)
+if (!fs.existsSync('uploads')) {
+    fs.mkdirSync('uploads');
+}
+
 const upload = multer({ dest: 'uploads/' });
 
-// detect OS (Windows or Linux)
+// ✅ detect OS
 const isWindows = process.platform === "win32";
 
-// compile command
+// ✅ compile command
 const compileCmd = isWindows
     ? "g++ compressor.cpp -o compressor.exe"
     : "g++ compressor.cpp -o compressor";
 
-// run command
+// ✅ run command
 const runCmd = isWindows
     ? "compressor.exe"
     : "./compressor";
 
-// serve frontend
+// ✅ serve frontend
 app.use(express.static('public'));
 
 // ================= COMPRESS =================
@@ -63,7 +68,9 @@ app.post('/decompress', upload.single('file'), (req, res) => {
     });
 });
 
-// ================= START SERVER =================
-app.listen(3000, () => {
-    console.log("Server running on http://localhost:3000");
+// ✅ IMPORTANT: works for both local + Render
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
